@@ -15,7 +15,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory, StreamlitChatMessageHistory
 from langchain.chains import ConversationalRetrievalChain
-from langchain.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_core.prompts import PromptTemplate
 
 from utils import get_available_openai_models
