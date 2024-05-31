@@ -1,4 +1,7 @@
 streamlit
-openai
 langchain
-langchain-openai
+openai
+tiktoken
+langchain-chroma
+langchain_experimental
+"langchain[docarray]"
