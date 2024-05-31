@@ -2,7 +2,6 @@ import os
 import time
 
 import streamlit as st
-from langchain_text_splitters import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory, StreamlitChatMessageHistory
@@ -10,6 +9,7 @@ from langchain.chains import ConversationalRetrievalChain, LLMChain
 from langchain.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
 from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import CharacterTextSplitter
 import chromadb
 from utils import get_available_openai_models
 import tempfile
