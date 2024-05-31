@@ -18,9 +18,6 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
 from utils import get_available_openai_models
-from secret_key import open_api_key
-
-os.environ["OPENAI_API_KEY"]=open_api_key
 
 DB_DIRECTORY = "./chroma"
 
@@ -182,7 +179,7 @@ def create_conversational_chain(view, memory, prompt, df, db):
             response = conversation_chain({"question": value})
             view.add_message(response['answer'], "assistant")
 
-
+load_dotenv()
 # Initialize the StreamlitChatView
 view = StreamlitChatView()
 
