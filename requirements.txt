@@ -7,3 +7,4 @@ langchain_experimental
 chromadb
 chardet
 python-docx
+tiktoken
