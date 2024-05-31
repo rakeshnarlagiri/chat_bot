@@ -17,8 +17,6 @@ from langchain.memory import ConversationBufferMemory, StreamlitChatMessageHisto
 from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
-import chromadb
-
 from utils import get_available_openai_models
 
 os.environ["OPENAI_API_KEY"] = "sk-proj-JfeYkxhfDyMFKzlsXPrVT3BlbkFJrhdbx2zT52oNOsw6SuAD"
