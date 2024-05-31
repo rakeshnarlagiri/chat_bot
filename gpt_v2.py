@@ -18,7 +18,7 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
 from utils import get_available_openai_models
-from secret-key import open_api_key
+from secret_key import open_api_key
 
 os.environ["OPENAI_API_KEY"]=open_api_key
 
