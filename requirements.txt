@@ -4,4 +4,4 @@ openai
 tiktoken
 langchain-chroma
 langchain_experimental
-
+chromadb
