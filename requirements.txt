@@ -6,3 +6,4 @@ langchain-chroma
 langchain_experimental
 chromadb
 chardet
+python-docx
