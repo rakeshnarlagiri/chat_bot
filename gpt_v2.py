@@ -88,10 +88,6 @@ class StreamlitChatView:
         with st.chat_message(author):
             st.markdown(message)
 
-    def add_message_stream(self, author: str):
-        assert author in ["user", "assistant"]
-        return StreamHandler(st.chat_message(author).empty())
-
 
 def read_csv(view):
     if view.csv_file:
