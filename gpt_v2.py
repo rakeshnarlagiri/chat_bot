@@ -19,7 +19,6 @@ from langchain.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
 
 from utils import get_available_openai_models
-from streaming import StreamHandler
 
 os.environ["OPENAI_API_KEY"] = "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"
 DB_DIRECTORY = "./chroma"
