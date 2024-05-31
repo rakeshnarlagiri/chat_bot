@@ -8,3 +8,4 @@ chardet
 python-docx
 tiktoken
 pypdf
+chromadb
