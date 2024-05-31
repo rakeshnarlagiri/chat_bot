@@ -32,12 +32,10 @@ TEMPLATE = (
 )
 
 
-@st.cache_data
 def chat_model_list():
     return get_available_openai_models(put_first='gpt-3.5-turbo', filter_by='gpt')
 
 
-@st.cache_data
 def embedding_model_list():
     return get_available_openai_models(filter_by='embedding')
 
