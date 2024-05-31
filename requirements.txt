@@ -8,4 +8,4 @@ chardet
 python-docx
 tiktoken
 pypdf
-
+python-dotenv==1.0.0
