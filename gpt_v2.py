@@ -1,3 +1,4 @@
+import os
 import time
 import tempfile
 import json
@@ -17,7 +18,9 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
 from utils import get_available_openai_models
-from secret-key import OPENAPI_KEY
+from secret-key import open_api_key
+
+os.environ["OPENAI_API_KEY"]=open_api_key
 
 DB_DIRECTORY = "./chroma"
 
