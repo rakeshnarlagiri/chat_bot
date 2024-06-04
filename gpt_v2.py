@@ -7,7 +7,7 @@ import pandas as pd
 import chardet
 from io import StringIO
 from docx import Document
-from dotenv import load_dotenv
+
 import streamlit as st
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
@@ -17,6 +17,7 @@ from langchain.memory import ConversationBufferMemory, StreamlitChatMessageHisto
 from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
+
 from utils import get_available_openai_models
 
 DB_DIRECTORY = "./chroma"
@@ -60,6 +61,8 @@ def get_saved_databases():
     return dbs
 
 
+button_view = False
+
 class StreamlitChatView:
     def __init__(self, default_embeddings_model="text-embedding-ada-002"):
         st.set_page_config(page_title="RAG ChatGPT", page_icon="📚", layout="wide")
@@ -77,6 +80,12 @@ class StreamlitChatView:
             with st.expander("Prompts"):
                 self.context_prompt = st.text_area("Context prompt", value=TEMPLATE)
             self.input_file = st.file_uploader("Upload File", type=["pdf", "docx", "doc", "json", ".xlsx"])
+            if self.input_file:
+                file_name = os.path.splitext(self.input_file.name)[0]
+                if os.path.exists(os.path.join(DB_DIRECTORY, file_name)):
+                    st.button("Save to database", disabled=True)
+                else:
+                    self.save_button_clicked = st.button("Save to database", disabled=button_view)
             self.selected_db = st.selectbox("Select saved database:", [""] + get_saved_databases(), index=0)
             self.csv_file = st.file_uploader("Upload csv for questions", type="csv")
 
@@ -85,7 +94,6 @@ class StreamlitChatView:
     def add_message(self, message, author):
         with st.chat_message(author):
             st.markdown(message)
-
 
 def read_csv(view):
     if view.csv_file:
@@ -179,7 +187,7 @@ def create_conversational_chain(view, memory, prompt, df, db):
             response = conversation_chain({"question": value})
             view.add_message(response['answer'], "assistant")
 
-load_dotenv()
+
 # Initialize the StreamlitChatView
 view = StreamlitChatView()
 
@@ -202,29 +210,38 @@ with col2:
     if st.button("Clear ↺"):
         clear_chat(memory)
 
-
-if view.input_file:
+if view.input_file and not view.selected_db:
     data = prepare_docs(view)
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     docs = text_splitter.split_documents(data)
-    if os.path.exists(os.path.join(DB_DIRECTORY, view.input_file.name)):
-        st.warning('already have a db for this', icon="⚠️")
+    db_name = os.path.splitext(view.input_file.name)[0]
+    db_path = os.path.join(DB_DIRECTORY, db_name)
+    if os.path.exists(db_path):
+        st.warning('already have a database for this select it from below', icon="⚠️")
+
     else:
         embeddings = OpenAIEmbeddings(model=view.embeddings_model_name)
         vectorstore = Chroma.from_documents(docs, embeddings)
-        if st.sidebar.button("save to database"):
+        if view.save_button_clicked:
             # vectorstore.persist(persist_directory=os.path.join(DB_DIRECTORY, view.input_file.name))
-            vectorstore = Chroma.from_documents(docs, embeddings, persist_directory=os.path.join(DB_DIRECTORY, view.input_file.name))
+            vectorstore = Chroma.from_documents(docs, embeddings, persist_directory=db_path)
             st.success('database saved successfully select from below', icon="✅")
         create_conversational_chain(view, memory, prompt, df, vectorstore)
 
-elif view.selected_db:
+
+elif view.selected_db and view.selected_db != "" and not view.input_file:
     embeddings = OpenAIEmbeddings(model=view.embeddings_model_name)
     selected_db_path = os.path.join(DB_DIRECTORY, view.selected_db)
     vectorstore = Chroma(persist_directory=selected_db_path, embedding_function=embeddings)
     create_conversational_chain(view, memory, prompt, df, vectorstore)
+
 elif view.selected_db and view.input_file:
-    st.warning("select only one source( Either upload or select db )", icon="⚠️")
+    if view.selected_db == os.path.splitext(view.input_file.name)[0]:
+        st.warning(f" please remove the uploaded ( {view.input_file.name} ), it already selected below", icon="⚠️")
+    else:
+        button_view = True
+        st.warning("select only one source( Either upload or select db )", icon="⚠️")
+
 else:
-    st.info('select a database or upload file to create db', icon="ℹ️")
+    st.info('upload a file (or) select a database to chat with', icon="ℹ️")
 
