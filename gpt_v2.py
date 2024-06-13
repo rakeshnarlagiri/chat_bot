@@ -17,8 +17,11 @@ from langchain.memory import ConversationBufferMemory, StreamlitChatMessageHisto
 from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
+from langchain_community.vectorstores import FAISS
 
 from utils import get_available_openai_models
+
+
 
 DB_DIRECTORY = "./chroma"
 
@@ -61,13 +64,14 @@ def get_saved_databases():
     return dbs
 
 
-button_view = False
-
 class StreamlitChatView:
     def __init__(self, default_embeddings_model="text-embedding-ada-002"):
-        st.set_page_config(page_title="RAG ChatGPT", page_icon="📚", layout="wide")
+        st.set_page_config(page_title="RAG chroma", page_icon="📚", layout="wide")
         with st.sidebar:
             st.title("RAG ChatGPT")
+            self.api_key = st.text_input("OpenAI API Key", type="password")
+            if self.api_key:
+                os.environ["OPENAI_API_KEY"] = self.api_key
             with st.expander("Model parameters"):
                 self.model_name = st.selectbox("Model:", options=chat_model_list())
                 self.temperature = st.slider("Temperature", min_value=0., max_value=2., value=0.7, step=0.01)
@@ -85,7 +89,7 @@ class StreamlitChatView:
                 if os.path.exists(os.path.join(DB_DIRECTORY, file_name)):
                     st.button("Save to database", disabled=True)
                 else:
-                    self.save_button_clicked = st.button("Save to database", disabled=button_view)
+                    self.save_button_clicked = st.button("Save to database")
             self.selected_db = st.selectbox("Select saved database:", [""] + get_saved_databases(), index=0)
             self.csv_file = st.file_uploader("Upload csv for questions", type="csv")
 
@@ -94,6 +98,7 @@ class StreamlitChatView:
     def add_message(self, message, author):
         with st.chat_message(author):
             st.markdown(message)
+
 
 def read_csv(view):
     if view.csv_file:
@@ -209,39 +214,39 @@ with col1:
 with col2:
     if st.button("Clear ↺"):
         clear_chat(memory)
+if view.api_key:
+    if view.input_file and not view.selected_db:
+        data = prepare_docs(view)
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        docs = text_splitter.split_documents(data)
+        db_name = os.path.splitext(view.input_file.name)[0]
+        db_path = os.path.join(DB_DIRECTORY, db_name)
+        if os.path.exists(db_path):
+            st.warning(f'already have a database for ( {view.input_file.name} ) select it from below', icon="⚠️")
 
-if view.input_file and not view.selected_db:
-    data = prepare_docs(view)
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    docs = text_splitter.split_documents(data)
-    db_name = os.path.splitext(view.input_file.name)[0]
-    db_path = os.path.join(DB_DIRECTORY, db_name)
-    if os.path.exists(db_path):
-        st.warning('already have a database for this select it from below', icon="⚠️")
+        else:
+            embeddings = OpenAIEmbeddings(model=view.embeddings_model_name)
+            vectorstore = Chroma.from_documents(docs, embeddings)
+            if view.save_button_clicked:
+                # vectorstore.persist(persist_directory=os.path.join(DB_DIRECTORY, view.input_file.name))
+                vectorstore = Chroma.from_documents(docs, embeddings, persist_directory=db_path)
+                st.success('database saved successfully select from below', icon="✅")
+            create_conversational_chain(view, memory, prompt, df, vectorstore)
 
-    else:
+
+    elif view.selected_db and view.selected_db != "" and not view.input_file:
         embeddings = OpenAIEmbeddings(model=view.embeddings_model_name)
-        vectorstore = Chroma.from_documents(docs, embeddings)
-        if view.save_button_clicked:
-            # vectorstore.persist(persist_directory=os.path.join(DB_DIRECTORY, view.input_file.name))
-            vectorstore = Chroma.from_documents(docs, embeddings, persist_directory=db_path)
-            st.success('database saved successfully select from below', icon="✅")
+        selected_db_path = os.path.join(DB_DIRECTORY, view.selected_db)
+        vectorstore = Chroma(persist_directory=selected_db_path, embedding_function=embeddings)
         create_conversational_chain(view, memory, prompt, df, vectorstore)
 
+    elif view.selected_db and view.input_file:
+        if view.selected_db == os.path.splitext(view.input_file.name)[0]:
+            st.warning(f" please remove the uploaded ( {view.input_file.name} ), it already selected below", icon="⚠️")
+        else:
+            st.warning("select only one source( Either upload or select db )", icon="⚠️")
 
-elif view.selected_db and view.selected_db != "" and not view.input_file:
-    embeddings = OpenAIEmbeddings(model=view.embeddings_model_name)
-    selected_db_path = os.path.join(DB_DIRECTORY, view.selected_db)
-    vectorstore = Chroma(persist_directory=selected_db_path, embedding_function=embeddings)
-    create_conversational_chain(view, memory, prompt, df, vectorstore)
-
-elif view.selected_db and view.input_file:
-    if view.selected_db == os.path.splitext(view.input_file.name)[0]:
-        st.warning(f" please remove the uploaded ( {view.input_file.name} ), it already selected below", icon="⚠️")
     else:
-        button_view = True
-        st.warning("select only one source( Either upload or select db )", icon="⚠️")
-
+        st.info('upload a file (or) select a database to chat with', icon="ℹ️")
 else:
-    st.info('upload a file (or) select a database to chat with', icon="ℹ️")
-
+    st.warning("please enter api_key")
