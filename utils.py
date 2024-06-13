@@ -9,6 +9,4 @@ def get_available_openai_models(put_first=None, filter_by=None):
         assert put_first in model_list
         model_list.remove(put_first)
         model_list = [put_first] + model_list
-    # Ensure all strings are encoded in UTF-8 to prevent UnicodeEncodeError
-    model_list = [m.encode('utf-8').decode('utf-8') for m in model_list]
     return model_list
