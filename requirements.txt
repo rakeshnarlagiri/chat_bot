@@ -3,7 +3,7 @@ streamlit
 langchain
 openai
 tiktoken
-langchain-chroma==0.2.0
+langchain-chroma
 langchain_experimental
 chardet
 python-docx
