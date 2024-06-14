@@ -9,3 +9,4 @@ python-docx
 tiktoken
 pypdf
 python-dotenv==1.0.0
+chromadb==0.3.29
