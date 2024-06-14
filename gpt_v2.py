@@ -18,10 +18,11 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
 from langchain_community.vectorstores import FAISS
-
 from utils import get_available_openai_models
 
-
+import pysqlite3
+import sys
+sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
 DB_DIRECTORY = "./chroma"
 
