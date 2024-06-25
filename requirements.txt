@@ -10,3 +10,4 @@ python-docx
 tiktoken
 pypdf
 python-dotenv==1.0.0
+protobuf==3.20.0
